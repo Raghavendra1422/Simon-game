@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simon Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script defer src="script.js"></script>
+</head>
+<body>
+    <h1 id="level-title">Press Any Key to Start</h1>
+    <div class="container">
+        <div class="row">
+            <div class="btn red" id="red"></div>
+            <div class="btn blue" id="blue"></div>
+        </div>
+        <div class="row">
+            <div class="btn green" id="green"></div>
+            <div class="btn yellow" id="yellow"></div>
+        </div>
+    </div>
+</body>
+</html>
+
+<style>
+    body {
+        text-align: center;
+        background-color: #011F3F;
+        font-family: Arial, sans-serif;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .row {
+        display: flex;
+    }
+    .btn {
+        width: 100px;
+        height: 100px;
+        margin: 10px;
+        border-radius: 20%;
+        border: 5px solid black;
+        cursor: pointer;
+    }
+    .red { background-color: red; }
+    .blue { background-color: blue; }
+    .green { background-color: green; }
+    .yellow { background-color: yellow; }
+    .pressed {
+        opacity: 0.5;
+    }
+    .game-over {
+        background-color: red;
+    }
+</style>
+
+<script>
+    let gamePattern = [];
+    let userPattern = [];
+    let colors = ["red", "blue", "green", "yellow"];
+    let keyMap = { "r": "red", "b": "blue", "g": "green", "y": "yellow" };
+    let started = false;
+    let level = 0;
+
+    // Sound files
+    let sounds = {
+        "red": new Audio("sounds/red.mp3"),
+        "blue": new Audio("sounds/blue.mp3"),
+        "green": new Audio("sounds/green.mp3"),
+        "yellow": new Audio("sounds/yellow.mp3"),
+        "wrong": new Audio("sounds/wrong.mp3")
+    };
+
+    $(document).keypress(function (event) {
+        if (!started) {
+            $("#level-title").text("Level " + level);
+            nextSequence();
+            started = true;
+        } else if (keyMap[event.key]) {
+            let userChosenColor = keyMap[event.key];
+            userPattern.push(userChosenColor);
+            playSound(userChosenColor);
+            animatePress(userChosenColor);
+            checkAnswer(userPattern.length - 1);
+        }
+    });
+
+    $(".btn").click(function () {
+        let userChosenColor = $(this).attr("id");
+        userPattern.push(userChosenColor);
+        playSound(userChosenColor);
+        animatePress(userChosenColor);
+        checkAnswer(userPattern.length - 1);
+    });
+
+    function checkAnswer(currentLevel) {
+        if (userPattern[currentLevel] === gamePattern[currentLevel]) {
+            if (userPattern.length === gamePattern.length) {
+                setTimeout(() => {
+                    nextSequence();
+                }, 1000);
+            }
+        } else {
+            playSound("wrong");
+            $("body").addClass("game-over");
+            $("#level-title").text("Game Over! Press Any Key to Restart");
+            setTimeout(() => {
+                $("body").removeClass("game-over");
+            }, 200);
+            startOver();
+        }
+    }
+
+    function nextSequence() {
+        userPattern = [];
+        level++;
+        $("#level-title").text("Level " + level);
+        let randomChosenColor = colors[Math.floor(Math.random() * 4)];
+        gamePattern.push(randomChosenColor);
+        $("#" + randomChosenColor).fadeIn(100).fadeOut(100).fadeIn(100);
+        playSound(randomChosenColor);
+    }
+
+    function playSound(name) {
+        sounds[name].play();
+    }
+
+    function animatePress(currentColor) {
+        $("#" + currentColor).addClass("pressed");
+        setTimeout(() => {
+            $("#" + currentColor).removeClass("pressed");
+        }, 100);
+    }
+
+    function startOver() {
+        level = 0;
+        gamePattern = [];
+        started = false;
+    }
+</script>
